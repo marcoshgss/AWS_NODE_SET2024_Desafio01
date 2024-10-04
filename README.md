@@ -35,7 +35,7 @@ Abra o terminal e execute essa linha de comando.
 npm start
  ```
 
-Depois, abra qualquer navegador web da sua preferência (ex: Google Chrome, Firefox, Edge, Opera, Safari e etc).
+Depois, abra o programa Postman ou qualquer outro da sua preferência, e efetuei os testes abrindo uma guia e colocando essa URL:
 
 Abra uma guia e coloque essa URL:
 
