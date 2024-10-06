@@ -1,8 +1,8 @@
 const express = require("express");
-const app     = express();
+const app = express();
 
-const conn    = require("./db/conn");
-const Car     = require("./models/Car");
+const conn = require("./db/conn");
+const Car = require("./models/Car");
 const CarItem = require("./models/CarItem");
 
 app.use(
@@ -25,7 +25,6 @@ const anoValido = (ano) => {
   return ano >= anoAtual - 10 && ano <= anoAtual;
 };
 
-
 app.post("/api/v1/cars", async (req, res) => {
   const { brand, model, year, items } = req.body;
 
@@ -42,7 +41,9 @@ app.post("/api/v1/cars", async (req, res) => {
 
   // Validação do ano do carro
   if (!anoValido(parseInt(year))) {
-    return res.status(400).json({error: `year should be between ${ new Date().getFullYear() - 10
+    return res.status(400).json({
+      error: `year should be between ${
+        new Date().getFullYear() - 10
       } and ${new Date().getFullYear()}`,
     });
   }
@@ -63,7 +64,7 @@ app.post("/api/v1/cars", async (req, res) => {
 
     if (items && Array.isArray(items)) {
       const itemEspecifico = removeDuplicateItems(items);
-    
+
       for (let i = 0; i < itemEspecifico.length; i++) {
         await CarItem.create({ name: itemEspecifico[i], CarId: car.id });
       }
@@ -74,7 +75,6 @@ app.post("/api/v1/cars", async (req, res) => {
   res.status(201).json({ id: car.id });
 });
 
-
 app.get("/api/v1/cars", async (req, res) => {
   try {
     const { page = 1, limit = 5, brand, model, year } = req.query;
@@ -83,7 +83,6 @@ app.get("/api/v1/cars", async (req, res) => {
     const numPagina = parseInt(page);
     const numLimite = Math.min(Math.max(parseInt(limit), 1), 10);
 
-
     const opcoes = {
       where: {},
       include: CarItem,
@@ -91,19 +90,21 @@ app.get("/api/v1/cars", async (req, res) => {
       offset: (numPagina - 1) * numLimite,
     };
 
-
-    if (brand) opcoes.where.brand = { 
-      [Sequelize.Op.like]: `%${brand}%` 
-    };
-    if (model) opcoes.where.model = { 
-      [Sequelize.Op.like]: `%${model}%`
-     };
-    if (year) opcoes.where.year = { 
-      [Sequelize.Op.gte]: year 
-    };
+    if (brand)
+      opcoes.where.brand = {
+        [Sequelize.Op.like]: `%${brand}%`,
+      };
+    if (model)
+      opcoes.where.model = {
+        [Sequelize.Op.like]: `%${model}%`,
+      };
+    if (year)
+      opcoes.where.year = {
+        [Sequelize.Op.gte]: year,
+      };
 
     const { count } = await Car.findAndCountAll(opcoes);
-    
+
     if (count === 0) {
       return res.status(204).send();
     }
@@ -114,12 +115,12 @@ app.get("/api/v1/cars", async (req, res) => {
     res.status(200).json({
       count,
       pages,
-      data: cars.map(car => ({
+      data: cars.map((car) => ({
         id: car.id,
         brand: car.brand,
         model: car.model,
         year: car.year,
-        items: car.CarItems 
+        items: car.CarItems,
       })),
     });
   } catch (error) {
@@ -133,7 +134,7 @@ app.get("/api/v1/cars/:id", async (req, res) => {
     const { id } = req.params;
 
     const car = await Car.findByPk(id, {
-      include: CarItem, 
+      include: CarItem,
     });
 
     if (!car) {
@@ -146,7 +147,7 @@ app.get("/api/v1/cars/:id", async (req, res) => {
       brand: car.brand,
       model: car.model,
       year: car.year,
-      items: car.CarItems 
+      items: car.CarItems,
     });
   } catch (error) {
     console.error(error);
@@ -154,6 +155,56 @@ app.get("/api/v1/cars/:id", async (req, res) => {
   }
 });
 
+app.patch("/api/v1/cars/:id", async (req, res) => {
+  const { id } = req.params;
+  const { brand, model, year, items } = req.body;
+
+  const car = await Car.findByPk(id);
+  if (!car) {
+    return res.status(404).json({ message: "car not found" });
+  }
+
+  if (year && !anoValido(parseInt(year))) {
+    return res.status(400).json({
+      message:
+        "year should be between " +
+        (new Date().getFullYear() - 10) +
+        " and " +
+        new Date().getFullYear(),
+    });
+  }
+
+  const carroExistente = await Car.findOne({
+    where: {
+      brand: brand || car.brand,
+      model: model || car.model,
+      year: year || car.year,
+    },
+  });
+
+  if (carroExistente) {
+    return res
+      .status(409)
+      .json({ message: "there is already a car with this data" });
+  }
+
+  if (brand) car.brand = brand;
+  if (model) car.model = model;
+  if (year) car.year = year;
+
+  await car.save();
+
+  if (items && Array.isArray(items)) {
+    await CarItem.destroy({ where: { CarId: car.id } });
+
+    const itemEspecifico = removeDuplicateItems(items);
+    for (let i of itemEspecifico) {
+      await CarItem.create({ name: i, CarId: car.id });
+    }
+  }
+
+  res.sendStatus(204);
+});
 
 app.get("/", (req, res) => {
   res.send("Deu certo");
