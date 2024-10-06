@@ -68,9 +68,64 @@ app.post("/api/v1/cars", async (req, res) => {
         await CarItem.create({ name: itemEspecifico[i], CarId: car.id });
       }
     }
+    console.log(`Itens inseridos para o carro ${car.id}: ${itemEspecifico}`);
   }
 
   res.status(201).json({ id: car.id });
+});
+
+
+app.get("/api/v1/cars", async (req, res) => {
+  try {
+    const { page = 1, limit = 5, brand, model, year } = req.query;
+
+    // Convertendo page e limit para inteiros
+    const numPagina = parseInt(page);
+    const numLimite = Math.min(Math.max(parseInt(limit), 1), 10);
+
+
+    const opcoes = {
+      where: {},
+      include: CarItem,
+      limit: numLimite,
+      offset: (numPagina - 1) * numLimite,
+    };
+
+
+    if (brand) opcoes.where.brand = { 
+      [Sequelize.Op.like]: `%${brand}%` 
+    };
+    if (model) opcoes.where.model = { 
+      [Sequelize.Op.like]: `%${model}%`
+     };
+    if (year) opcoes.where.year = { 
+      [Sequelize.Op.gte]: year 
+    };
+
+    const { count } = await Car.findAndCountAll(opcoes);
+    
+    if (count === 0) {
+      return res.status(204).send();
+    }
+
+    const pages = Math.ceil(count / numLimite);
+    const cars = await Car.findAll(opcoes);
+
+    res.status(200).json({
+      count,
+      pages,
+      data: cars.map(car => ({
+        id: car.id,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        items: car.CarItems 
+      })),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erro ao buscar carros.");
+  }
 });
 
 app.get("/", (req, res) => {

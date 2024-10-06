@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const db = require('../db/conn');
 
+
 const Car = db.define('Car', {
     brand: {
         type: DataTypes.STRING,
