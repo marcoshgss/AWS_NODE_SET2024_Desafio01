@@ -128,6 +128,33 @@ app.get("/api/v1/cars", async (req, res) => {
   }
 });
 
+app.get("/api/v1/cars/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const car = await Car.findByPk(id, {
+      include: CarItem, 
+    });
+
+    if (!car) {
+      return res.status(404).json({ error: "Car not found" });
+    }
+
+    // Retorna os dados do carro
+    res.status(200).json({
+      id: car.id,
+      brand: car.brand,
+      model: car.model,
+      year: car.year,
+      items: car.CarItems 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar carro" });
+  }
+});
+
+
 app.get("/", (req, res) => {
   res.send("Deu certo");
 });
