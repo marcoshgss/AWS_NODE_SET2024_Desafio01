@@ -225,7 +225,8 @@ app.get("/", (req, res) => {
   res.send("Deu certo, o projeto está rodando!");
 });
 
-conn
+conn 
+  // .sync({force: true})
   .sync()
   .then(() => {
     app.listen(3000, () => {

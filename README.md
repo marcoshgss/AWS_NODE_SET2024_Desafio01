@@ -42,3 +42,24 @@ Abra uma guia e coloque essa URL:
  ```
 http://localhost:3000/
  ```
+
+### 👨‍💻 Guia de teste 
+Para efetuar os testes do CRUD e inserir os valores por exemplo, é necessário ir na configuração do corpo da requisição:
+
+ - Precisa clicar em "Body" que fica abaixo do campo de URL.
+
+ - Depois selecione "raw".
+
+ - Em seguida, no menu suspenso a direita do campo, selecione a opção "JSON".
+
+Isso irá ter a possibilidade de adicionar o JSON. No campo de texto que aparece, insira o corpo da requisição em formato JSON. Por exemplo:
+
+ ```
+{
+    "brand": "Fiat",
+    "model": "Cronos",
+    "year": 2018,
+    "items": ["Ar condicionado", "Direção hidráulica"]
+}
+
+ ```

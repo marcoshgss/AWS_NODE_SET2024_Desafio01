@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../db/conn');
-
+const CarItem = require('./CarItem'); 
 
 const Car = db.define('Car', {
     brand: {
@@ -19,5 +19,8 @@ const Car = db.define('Car', {
     tableName: 'cars'
 });
 
+
+Car.hasMany(CarItem, { foreignKey: 'CarId', onDelete: 'CASCADE',});
+CarItem.belongsTo(Car, {foreignKey: 'CarId',});
 
 module.exports = Car;
