@@ -206,8 +206,23 @@ app.patch("/api/v1/cars/:id", async (req, res) => {
   res.sendStatus(204);
 });
 
+app.delete("/api/v1/cars/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const car = await Car.findByPk(id);
+  if (!car) {
+    return res.status(404).json({ message: "car not found" });
+  }
+
+  await CarItem.destroy({ where: { CarId: car.id } });
+  await car.destroy();
+
+
+  res.sendStatus(204);
+});
+
 app.get("/", (req, res) => {
-  res.send("Deu certo");
+  res.send("Deu certo, o projeto está rodando!");
 });
 
 conn
